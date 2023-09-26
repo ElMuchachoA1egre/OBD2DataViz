@@ -113,24 +113,28 @@ class DataViewer:
         plt.savefig(f'{output_path}/MPG vs Speed.png')
         plt.close()
 
+        # Driving Coordinates
 
+        plt.figure()
+        img = plt.imread('data/38.6619-40.4595--107.600--104.5624.png')
+        bounding_coordinates = [-107.4600, -104.5624, 38.6619, 40.4595]
+        plt.imshow(img, zorder=0, extent=bounding_coordinates, aspect='auto')
 
-        plt.figure(figsize=(11, 8.5))
-        plt.scatter(40.28780699973443, -104.9934334445547, label = 'Ursa Major', s=500, marker='*', zorder=123)    
+        plt.scatter(-104.9934334445547, 40.28780699973443, label = 'Ursa Major', s=50, marker='*', zorder=123)    
 
         for data_file_name, data_frame in self.processed_data_frames.items():  
 
             try:
-                x, y = data_frame['LATITUDE'], data_frame['LONGTITUDE']
-                plt.scatter(x,y, label = data_file_name, s=10)
+                x, y = data_frame['LONGTITUDE'], data_frame['LATITUDE']
+                plt.scatter(x,y, label = data_file_name, s=2)
             except:
                 pass
 
-        plt.xlabel('LATITUDE')
-        plt.ylabel('LONGITUDE')
-        plt.legend()
+        plt.xlabel('LONGITUDE')
+        plt.ylabel('LATITUDE')
+        plt.legend(fontsize = '6')
         plt.title('DRIVING GPS COORDINATES')
-        plt.savefig(f'{output_path}/driving_coordinates.png')
+        plt.savefig(f'{output_path}/driving_coordinates.png', dpi = 600)
         plt.close()
 
 if __name__ == "__main__":
