@@ -3,11 +3,46 @@ import csv
 import glob as g
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
+
+
+class OBD2Dataframe:
+
+    def __init__(self, raw_data_frame: pd.DataFrame) -> None:
+        self.raw_data = raw_data_frame
+        self.column_dtypes = {
+            'VALUE' : float,
+            'SECONDS': float
+        }
+        self.processed_data = self.parse_raw_data()
+
+    def parse_raw_data(self) -> pd.DataFrame:
+
+        self.raw_data = self.raw_data.astype(self.column_dtypes)
+        self.raw_data['SECONDS'] -= self.raw_data['SECONDS'].min()
+        self.raw_data['SECONDS'] = pd.to_datetime(self.raw_data['SECONDS'], unit='s')
+
+        sensor_channels = self.raw_data['PID'].unique()
+        sensor_data = {sensor:  self.raw_data[ self.raw_data['PID'] == sensor] for sensor in  sensor_channels}
+
+        for sensor, df in sensor_data.items():
+            df = df.drop_duplicates(subset=['SECONDS'])
+            df = df.set_index('SECONDS')
+            resampled_df = df.resample('1S').ffill()
+            resampled_df = resampled_df.rename(columns={'VALUE': sensor})
+            sensor_data[sensor] = resampled_df[sensor]
+
+        
+        processed_data = pd.concat(sensor_data.values(), axis='columns')
+
+        return processed_data
 
 class DataViewer:
     def __init__(self, data_path) -> None:
         self.data_path = data_path
         self.cwd = os.getcwd()
+        self.processed_data_frames = {}
+        self.column_names = []
         self.load_data()
 
     def load_data(self) -> pd.DataFrame:
@@ -17,68 +52,59 @@ class DataViewer:
             data = open(file_path, "r").read(bytes)
             delimiter = sniffer.sniff(data).delimiter
             return delimiter
-        
-        self.data = {}
-        self.channel_data = {}
 
         for csv_file in g.glob(os.path.join(self.cwd, data_path, '*.csv')):
-            file_name = os.path.basename(csv_file)
+            data_file_name = os.path.basename(csv_file)
             data_df = pd.read_csv(csv_file, delimiter=get_delimiter(csv_file))
-            data_df['VALUE'] = data_df['VALUE'].astype(float)
-            data_df['SECONDS'] = data_df['SECONDS'].astype(float)
-            data_df['SECONDS'] -= data_df['SECONDS'].min()
-            sensor_data = {sensor: data_df[data_df['PID'] == sensor] for sensor in data_df['PID'].unique()}
-            self.data[file_name] = sensor_data
+            processed_data_frame = OBD2Dataframe(raw_data_frame=data_df).processed_data
+            self.column_names.extend(processed_data_frame.columns.tolist())
+            self.processed_data_frames[data_file_name] = processed_data_frame
 
-            for sensor, df in sensor_data.items():
+        self.column_names = list(set(self.column_names))
 
-                if sensor not in self.channel_data.keys():
-                    self.channel_data[sensor] = {
-                        'data_file' : [],
-                        'data' : []
-                    }
-
-                self.channel_data[sensor]['data_file'].append(file_name)
-                self.channel_data[sensor]['data'].append(df)
- 
-
-        
     def plot_data(self, output_path) -> None:
         
         os.makedirs(output_path, exist_ok=True)
 
-        channels = {}
-
-        # for data_file_name, sensor_data in self.data.items():
-        #     full_output_path = os.path.join(output_path, data_file_name)
-        #     os.makedirs(full_output_path, exist_ok=True)
-        #     for sensor, df in sensor_data.items():
-        #         x, y, units = df['SECONDS'], df['VALUE'], df['UNITS'].iloc[0]
-        #         sensor_name = sensor.replace(" ", "_").replace("/", "_")
-                
-        #         plt.figure(figsize=(11, 8.5))
-        #         plt.plot(x, y)
-        #         plt.xlabel('Time (seconds)')
-        #         plt.ylabel(f'{sensor} {units}')
-        #         plt.savefig(f'{full_output_path}/{sensor_name}.png')
-        #         plt.close()
-        
-        for channel_name, data in self.channel_data.items():
-            data_files, data_dfs = data['data_file'], data['data']
-            plt.figure(figsize=(11, 8.5))
-        
-            for data_file, data_df in zip(data_files, data_dfs):
-                x, y, units = data_df['SECONDS'], data_df['VALUE'], data_df['UNITS'].iloc[0]
-                channel_name = channel_name.replace(" ", "_").replace("/", "_")
-                plt.plot(x,y, label = data_file)
+        for channel_name in self.column_names:
             
+            plt.figure(figsize=(11, 8.5))
+
+            for data_file_name, data_frame in self.processed_data_frames.items():  
+
+                try:
+                    x, y = data_frame.index, data_frame[channel_name]
+                    plt.plot(x,y, label = data_file_name)
+                except:
+                    pass
+
             plt.xlabel('Time (seconds)')
-            plt.ylabel(f'{channel_name} {units}')
+            date_format = DateFormatter('%H:%M:%S')
+            plt.gca().xaxis.set_major_formatter(date_format)
+
+            plt.ylabel(f'{channel_name}')
             plt.legend()
             plt.title(f'{channel_name}')
-            plt.savefig(f'{output_path}/{channel_name}.png')
+            plt.savefig(f'{output_path}/{channel_name.replace(" ", "_").replace("/", "_")}.png')
             plt.close()
+        
+            
+        plt.figure(figsize=(11, 8.5))
 
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+
+            try:
+                x, y = data_frame['Vehicle speed'], data_frame['Calculated instant fuel consumption']
+                plt.scatter(x,y, label = data_file_name, s=5)
+            except:
+                pass
+
+        plt.xlabel('Vehicle Speed (MPH)')
+        plt.ylabel('Calculated Instant Fuel Consumption (MPG)')
+        plt.legend()
+        plt.title('MPG vs Speed')
+        plt.savefig(f'{output_path}/MPG vs Speed.png')
+        plt.close()
 
 if __name__ == "__main__":
 
