@@ -31,6 +31,12 @@ class OBD2Dataframe:
             resampled_df = df.resample('1S').ffill()
             resampled_df = resampled_df.rename(columns={'VALUE': sensor})
             sensor_data[sensor] = resampled_df[sensor]
+            if sensor == 'Vehicle speed':
+                latitude = resampled_df['LATITUDE'].astype(float)
+                longitude = resampled_df['LONGTITUDE'].astype(float)
+
+        sensor_data['LATITUDE'] = latitude
+        sensor_data['LONGTITUDE'] = longitude
 
         
         processed_data = pd.concat(sensor_data.values(), axis='columns')
@@ -66,27 +72,27 @@ class DataViewer:
         
         os.makedirs(output_path, exist_ok=True)
 
-        for channel_name in self.column_names:
+        # for channel_name in self.column_names:
             
-            plt.figure(figsize=(11, 8.5))
+        #     plt.figure(figsize=(11, 8.5))
 
-            for data_file_name, data_frame in self.processed_data_frames.items():  
+        #     for data_file_name, data_frame in self.processed_data_frames.items():  
 
-                try:
-                    x, y = data_frame.index, data_frame[channel_name]
-                    plt.plot(x,y, label = data_file_name)
-                except:
-                    pass
+        #         try:
+        #             x, y = data_frame.index, data_frame[channel_name]
+        #             plt.plot(x,y, label = data_file_name)
+        #         except:
+        #             pass
 
-            plt.xlabel('Time (seconds)')
-            date_format = DateFormatter('%H:%M:%S')
-            plt.gca().xaxis.set_major_formatter(date_format)
+        #     plt.xlabel('Time (seconds)')
+        #     date_format = DateFormatter('%H:%M:%S')
+        #     plt.gca().xaxis.set_major_formatter(date_format)
 
-            plt.ylabel(f'{channel_name}')
-            plt.legend()
-            plt.title(f'{channel_name}')
-            plt.savefig(f'{output_path}/{channel_name.replace(" ", "_").replace("/", "_")}.png')
-            plt.close()
+        #     plt.ylabel(f'{channel_name}')
+        #     plt.legend()
+        #     plt.title(f'{channel_name}')
+        #     plt.savefig(f'{output_path}/{channel_name.replace(" ", "_").replace("/", "_")}.png')
+        #     plt.close()
         
             
         plt.figure(figsize=(11, 8.5))
@@ -94,6 +100,7 @@ class DataViewer:
         for data_file_name, data_frame in self.processed_data_frames.items():  
 
             try:
+                # filtered_data=data_frame(data_frame)
                 x, y = data_frame['Vehicle speed'], data_frame['Calculated instant fuel consumption']
                 plt.scatter(x,y, label = data_file_name, s=5)
             except:
@@ -104,6 +111,26 @@ class DataViewer:
         plt.legend()
         plt.title('MPG vs Speed')
         plt.savefig(f'{output_path}/MPG vs Speed.png')
+        plt.close()
+
+
+
+        plt.figure(figsize=(11, 8.5))
+        plt.scatter(40.28780699973443, -104.9934334445547, label = 'Ursa Major', s=500, marker='*', zorder=123)    
+
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+
+            try:
+                x, y = data_frame['LATITUDE'], data_frame['LONGTITUDE']
+                plt.scatter(x,y, label = data_file_name, s=10)
+            except:
+                pass
+
+        plt.xlabel('LATITUDE')
+        plt.ylabel('LONGITUDE')
+        plt.legend()
+        plt.title('DRIVING GPS COORDINATES')
+        plt.savefig(f'{output_path}/driving_coordinates.png')
         plt.close()
 
 if __name__ == "__main__":
