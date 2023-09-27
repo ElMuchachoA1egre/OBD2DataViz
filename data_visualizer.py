@@ -114,6 +114,27 @@ class DataViewer:
         plt.savefig(f'{output_path}/MPG vs Speed.png')
         plt.close()
 
+
+        plt.figure(figsize=(11, 8.5))
+
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+
+            try:
+                # filtered_data=data_frame(data_frame)
+                x, y = data_frame['Vehicle speed'], data_frame['Transmission Temperature (var.2)'].diff(periods=90)
+                plt.scatter(x,y, label = data_file_name, s=5)
+            except:
+                pass
+
+        plt.ylim(-15,15)
+        plt.xlabel('Vehicle Speed (MPH)')
+        plt.ylabel('Transmission Temperature Change (F) over 90 Seconds')
+        # plt.legend()
+        plt.title('JEEP PATRIOT 2009: Transmission Temperature Change (F) vs Speed')
+        plt.savefig(f'{output_path}/Transmission_Temperature_(var.2) Diff vs Speed.png')
+        plt.close()
+
+
         # Driving Coordinates
 
         plt.figure()
