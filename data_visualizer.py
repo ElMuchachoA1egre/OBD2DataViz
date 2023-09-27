@@ -167,6 +167,105 @@ class DataViewer:
         plt.savefig(f'{output_path}/Transmission Temperature Coordinates.png', dpi = 600)
         plt.close()
 
+
+        # Driving Coordinates
+
+        plt.figure()
+        img = plt.imread('data/38.6619-40.4595--107.600--104.5624.png')
+        bounding_coordinates = [-107.4600, -104.5624, 38.6619, 40.4595]
+        plt.imshow(img, zorder=0, extent=bounding_coordinates, aspect='auto')
+        plt.scatter(-104.9934334445547, 40.28780699973443, label = 'Ursa Major HQ', s=25, marker='*', zorder=123) 
+        
+        highlighted_channel = 'Vehicle speed'
+        data_accumulator = []
+
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+            data_accumulator.append(data_frame[['LONGTITUDE', 'LATITUDE', highlighted_channel]])
+
+        concat_data= pd.concat(data_accumulator)
+
+    
+        try:
+            x, y = concat_data['LONGTITUDE'], concat_data['LATITUDE']
+            color_data = concat_data[highlighted_channel]
+            plt.scatter(x,y, s=1, c=color_data, cmap='inferno')
+        except:
+            pass
+
+        plt.colorbar()
+        plt.xlabel('LONGITUDE')
+        plt.ylabel('LATITUDE')
+        plt.legend(fontsize = '6', loc = 'best' )
+        plt.title(f'JEEP PATRIOT 2009: {highlighted_channel}')
+        plt.savefig(f'{output_path}/{highlighted_channel} Coordinates.png', dpi = 600)
+        plt.close()
+
+        # Driving Coordinates
+
+        plt.figure()
+        img = plt.imread('data/38.6619-40.4595--107.600--104.5624.png')
+        bounding_coordinates = [-107.4600, -104.5624, 38.6619, 40.4595]
+        plt.imshow(img, zorder=0, extent=bounding_coordinates, aspect='auto')
+        plt.scatter(-104.9934334445547, 40.28780699973443, label = 'Ursa Major HQ', s=25, marker='*', zorder=123) 
+        
+        highlighted_channel = 'Calculated instant fuel consumption'
+        data_accumulator = []
+
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+            data_accumulator.append(data_frame[['LONGTITUDE', 'LATITUDE', highlighted_channel]])
+
+        concat_data= pd.concat(data_accumulator)
+
+    
+        try:
+            x, y = concat_data['LONGTITUDE'], concat_data['LATITUDE']
+            color_data = concat_data[highlighted_channel]
+            plt.scatter(x,y, s=1, c=color_data, cmap='inferno')
+        except:
+            pass
+        
+        plt.clim(0,30)
+        plt.colorbar()
+        plt.xlabel('LONGITUDE')
+        plt.ylabel('LATITUDE')
+        plt.legend(fontsize = '6', loc = 'best' )
+        plt.title(f'JEEP PATRIOT 2009: {highlighted_channel}')
+        plt.savefig(f'{output_path}/{highlighted_channel} Coordinates.png', dpi = 600)
+        plt.close()
+
+
+        plt.figure()
+        img = plt.imread('data/38.6619-40.4595--107.600--104.5624.png')
+        bounding_coordinates = [-107.4600, -104.5624, 38.6619, 40.4595]
+        plt.imshow(img, zorder=0, extent=bounding_coordinates, aspect='auto')
+        plt.scatter(-104.9934334445547, 40.28780699973443, label = 'Ursa Major HQ', s=25, marker='*', zorder=123) 
+        
+        highlighted_channel = 'Vehicle speed'
+        data_accumulator = []
+
+        for data_file_name, data_frame in self.processed_data_frames.items():  
+            data_accumulator.append(data_frame[['LONGTITUDE', 'LATITUDE', highlighted_channel]])
+
+        concat_data= pd.concat(data_accumulator)
+
+    
+        try:
+            x, y = concat_data['LONGTITUDE'], concat_data['LATITUDE']
+            color_data = concat_data[highlighted_channel].diff()
+            plt.scatter(x,y, s=1, c=color_data, cmap='inferno')
+        except:
+            pass
+        
+        plt.clim(-1,1)
+        plt.colorbar()
+        plt.xlabel('LONGITUDE')
+        plt.ylabel('LATITUDE')
+        plt.legend(fontsize = '6', loc = 'best' )
+        plt.title(f'JEEP PATRIOT 2009: {highlighted_channel} Diff')
+        plt.savefig(f'{output_path}/{highlighted_channel} Diff Coordinates.png', dpi = 600)
+        plt.close()
+
+
 if __name__ == "__main__":
 
     data_path = 'data'
