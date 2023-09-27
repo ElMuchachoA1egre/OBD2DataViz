@@ -130,7 +130,6 @@ class DataViewer:
                 plt.scatter(x,y, label = data_file_name, s=2)
             except:
                 pass
-        plt.colorbar()
         plt.xlabel('LONGITUDE')
         plt.ylabel('LATITUDE')
         plt.legend(fontsize = '6')
